@@ -147,7 +147,8 @@ def main():
             print(currentShift)
         calendarList += makeEvent(title=currentShift['job'], date=currentDay.strftime('%Y%m%d'),
                                   allDay=currentShift['rest'], start=currentShift['start'],
-                                  duration=currentShift['duration'], line=currentShift['line'])
+                                  duration=currentShift['duration'], line=currentShift['line'],
+                                  spare=currentShift['spare'], verbose=args.verbose)
         shiftsDeque.append(currentShift)
         currentDay = currentDay + timedelta(days=1)
 
@@ -174,7 +175,7 @@ def main():
         f.truncate()
 
 
-def makeEvent(title, date, line=1, allDay=False, start=False, duration=False):
+def makeEvent(title, date, line=1, allDay=False, start=False, duration=False, spare=False, verbose=False):
     nowString = datetime.now().strftime('%Y%m%dT%H%M%S')
     # print(int(date[0:4]), int(date[4:6]), int(date[6:8]))
     if allDay:
@@ -183,17 +184,19 @@ def makeEvent(title, date, line=1, allDay=False, start=False, duration=False):
     else:
         startTime = datetime(int(date[0:4]), int(date[4:6]), int(date[6:8]), int(start[0:2]), int(start[2:4]))
         endTime = startTime + timedelta(hours=int(duration[0:2]), minutes=int(duration[2:4]))
-    if args.verbose:
+    if verbose:
         print(f'Shift Starts {startTime.strftime("%a %d %b - %H.%M")}')
         print(f'Shift Ends {endTime.strftime("%a %d %b - %H.%M")}')
     if allDay:
         dstart = f';VALUE=DATE:{startTime.strftime("%Y%m%d")}'
         dend = f';VALUE=DATE:{endTime.strftime("%Y%m%d")}'
         desc = f'Line {line}'
+        title = 'Rest Day'
     else:
         dstart = f':{startTime.strftime("%Y%m%dT%H%M00")}'
         dend = f':{endTime.strftime("%Y%m%dT%H%M00")}'
         desc = f'Shift Length, {duration[0:2]}:{duration[2:4]}\\nLine {line}'
+        title = title if not spare else 'Spare'
 
     eventBuffer = [
         'BEGIN:VEVENT',
