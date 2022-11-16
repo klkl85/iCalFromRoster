@@ -1,2 +1,2 @@
 # iCalFromRoster
-Scripts to generate iCal files from Roster spreadsheets
+Scripts to generate .ics files from Roster spreadsheets.
