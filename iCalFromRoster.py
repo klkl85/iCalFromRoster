@@ -192,11 +192,13 @@ def makeEvent(title, date, line=1, allDay=False, start=False, duration=False, sp
         dend = f';VALUE=DATE:{endTime.strftime("%Y%m%d")}'
         desc = f'Line {line}'
         title = 'Rest Day'
+        locationString = ''
     else:
         dstart = f':{startTime.strftime("%Y%m%dT%H%M00")}'
         dend = f':{endTime.strftime("%Y%m%dT%H%M00")}'
         desc = f'Shift Length, {duration[0:2]}:{duration[2:4]}\\nLine {line}'
         title = title if not spare else 'Spare'
+        locationString = '5 Boad St\\nManchester\\n M1 2DW\\n, England\\n M1 2DW'
 
     eventBuffer = [
         'BEGIN:VEVENT',
@@ -205,7 +207,7 @@ def makeEvent(title, date, line=1, allDay=False, start=False, duration=False, sp
         f'DTSTART{dstart}',
         f'DTEND{dend}',
         f'UID:{uuid.uuid4()}',
-        'LOCATION:5 Boad St\\nManchester\\n M1 2DW\\n, England\\n M1 2DW',
+        f'LOCATION:{locationString}',
         'SEQUENCE:1',
         'X-APPLE-TRAVEL-ADVISORY-BEHAVIOR:AUTOMATIC',
         f'SUMMARY:{title}',
