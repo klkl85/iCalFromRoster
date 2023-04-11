@@ -6,6 +6,44 @@ import argparse
 from os.path import exists
 from collections import deque
 
+
+class col:
+    red = '\033[0m\033[91m'
+    Red = '\033[0m\033[1m\033[91m'
+    RED = '\033[0m\033[1m\033[30m\033[41m'
+    Ured = '\033[0m\033[1m\033[4m\033[91m'
+    grn = '\033[0m\033[92m'
+    Grn = '\033[0m\033[1m\033[92m'
+    GRN = '\033[0m\033[1m\033[30m\033[42m'
+    Ugrn = '\033[0m\033[1m\033[4m\033[92m'
+    blu = '\033[0m\033[94m'
+    Blu = '\033[0m\033[1m\033[94m'
+    BLU = '\033[0m\033[1m\033[30m\033[44m'
+    Ublu = '\033[0m\033[1m\033[4m\033[94m'
+    cyn = '\033[0m\033[96m'
+    Cyn = '\033[0m\033[1m\033[96m'
+    CYN = '\033[0m\033[1m\033[30m\033[46m'
+    Ucyn = '\033[0m\033[1m\033[4m\033[96m'
+    yel = '\033[0m\033[93m'
+    Yel = '\033[0m\033[1m\033[93m'
+    YEL = '\033[0m\033[1m\033[30m\033[43m'
+    Uyel = '\033[0m\033[1m\033[4m\033[93m'
+    mag = '\033[0m\033[95m'
+    Mag = '\033[0m\033[1m\033[95m'
+    MAG = '\033[0m\033[1m\033[30m\033[45m'
+    Umag = '\033[0m\033[1m\033[4m\033[95m'
+    k = '\033[0m\033[47m\033[30m'
+    K = '\033[0m\033[1m\033[47m\033[30m'
+    Uk = '\033[0m\033[1m\033[4m\033[47m\033[30m'
+    UK = '\033[0m\033[1m\033[4m\033[7m\033[47m\033[30m'
+    end = '\033[0m'
+    bold = '\033[1m'
+    italic = '\033[3m'
+    underline = '\033[4m'
+    blink = '\033[5m'
+    selected = '\033[7m'
+
+
 calPreamble = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -21,7 +59,7 @@ calPostamble = [
 
 
 def main():
-    print("Roster to Calendar Script...")
+    print(f"{col.Yel}Roster to Calendar Script...")
     # OPEN AND PARSE ROSTER SHEET
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', help='Roster file to parse')
@@ -32,44 +70,45 @@ def main():
 
     # WAS A FILE SUPPLIED
     if args.input is None:
-        print("Please Supply Roster CSV File with the -i option")
+        print(f"{col.Red}Please Supply Roster CSV File with the -i option")
         sys.exit(2)
 
     # DOES THE FILE EXIST
     if exists(args.input):
-        print("Found Roster...")
+        print(f"{col.Grn}Found Roster...{col.end}")
         rosterCSV = args.input
     else:
-        rosterCSV = input("File NOT found... please supply another: ")
+        rosterCSV = input(f"{col.Yel}File NOT found... {col.Cyn}please supply another: {col.end}")
         if not exists(rosterCSV):
             print("File NOT found... Re-run the script.")
             sys.exit(2)
         else:
-            print("Found Roster...")
+            print(f"{col.grn}Found Roster...{col.end}")
 
     # FIND OUT WHEN THE ROSTER STARTS
-    startDate = input("When does this roster start (YYYYMMDD) ? : ")
+    startDate = input(f"What {col.Cyn}date{col.end} does this roster {col.Cyn}START{col.end} {col.blu}(YYYYMMDD){col.end} ? : ")
     # Validate Roster Start
+    # @TODO HANDLE BLANK DATE
     rosterStart = datetime(int(startDate[0:4]), int(startDate[4:6]), int(startDate[6:8]))
     if not rosterStart.weekday() == 6:
-        print("Roster MUST start on a Sunday... Re-start the script")
+        print(f"{col.Red}Roster {col.Yel}MUST{col.Red} start on a {col.Yel}Sunday{col.Red}... Re-start the script")
         sys.exit(2)
     if args.verbose:
         print(rosterStart.strftime('Roster Starts %a %d %b'))
 
     # FIND OUT STARTING POSITION IN THE LINK
     if args.line is None:
-        startingLine = input("What line do you START in this link? : ")
+        startingLine = input(f"What {col.Cyn}line{col.end} do you {col.Cyn}START{col.end} in this link? : ")
     else:
         startingLine = args.line
     # Validate Starting Line
     try:
         startingLine = int(startingLine)
     except ValueError as verr:
-        print(f'Invalid Starting Line, `{startingLine}`, Aborting!')
+        print(f'{col.Red}Invalid Starting Line, {col.Yel}`{startingLine}`{col.Red}, Aborting!')
         sys.exit(2)
     if not startingLine >= 1:
-        print(f'`{startingLine}` is not a valid option for Starting Line')
+        print(f'{col.Yel}`{startingLine}`{col.Red} is not a valid option for Starting Line')
         sys.exit(2)
 
     # print(f'`{startingLine}` == Starting Line')
@@ -83,12 +122,12 @@ def main():
     with open(rosterCSV, newline='') as rosterFile:
         reader = csv.DictReader(rosterFile)
         if not all(item in reader.fieldnames for item in requiredFieldnames):
-            print("The roster file does not have the correct headings.\nExpecting;\n\t-", end='')
+            print(f"{col.Red}The roster file does not have the correct headings.\n{col.Yel}Expecting;\n\t-{col.Cyn}", end='')
             print('\n\t-'.join(requiredFieldnames))
-            print("\nCorrect the roster file or alter this script and re-run.")
+            print(f"\n{col.Red}Correct the roster file or alter this script and re-run.")
             sys.exit(2)
 
-        print("Reading Roster File...")
+        print(f"{col.Grn}Reading Roster File...{col.end}")
         for row in reader:
             eventDict = {
                 'link':     row['Link Name'],
@@ -114,23 +153,25 @@ def main():
         print("Finished reading roster...")
 
     # DETERMINE HOW WHEN TO START / STOP OUTPUTTING CALENDAR ENTRIES
-    outputStartRequest = input("What date do you want calendar entries START (YYYYMMDD) ? : ")
+    outputStartRequest = input(f"What {col.Cyn}date{col.end} do you want {col.Cyn}calendar{col.end} entries {col.Cyn}START {col.blu}(YYYYMMDD){col.end} ? : ")
+    # @TODO HANDLE BLANK DATE
     outputStart = datetime(int(outputStartRequest[0:4]), int(outputStartRequest[4:6]), int(outputStartRequest[6:8]))
     if outputStart < rosterStart:
-        print("You can't ask for calendar entries before the roster starts. Try again.")
+        print(f"{col.Red}You can't ask for calendar entries before the roster starts. {col.Yel}Try again.")
         sys.exit(2)
 
-    outputEndRequest = input("What date do you want calendar entries to END (YYYYMMDD) ? : ")
+    outputEndRequest = input(f"What {col.Cyn}date{col.end} do you want {col.Cyn}calendar{col.end} entries {col.Cyn}END {col.blu}(YYYYMMDD){col.end} ? : ")
+    # @TODO HANDLE BLANK DATE
     outputEnd = datetime(int(outputEndRequest[0:4]), int(outputEndRequest[4:6]), int(outputEndRequest[6:8]), 23, 59, 59)
     if outputEnd < outputStart:
-        print("You can't ask for calendar entries to end before they have started. Try again.")
+        print(f"{col.Red}You can't ask for calendar entries to end before they have started. {col.Yel}Try again.")
         sys.exit(2)
 
     # ROTATE DEQUE TO ALIGN WITH START REQUEST
     deltaDays = (outputStart - rosterStart).days
-    print(f'Skipping {deltaDays} days to get to {outputStart.strftime("%a %d %b")} ...')
+    print(f'{col.grn}Skipping {col.cyn}{deltaDays} days {col.grn}to get to {col.mag}{outputStart.strftime("%a %d %b")}{col.grn} ...')
     deltaDays += ((startingLine - 1) * 7)
-    print(f'Skipping {startingLine - 1} weeks to get to correct position in the link ...')
+    print(f'Skipping {col.cyn}{startingLine - 1} weeks {col.grn}to get to correct position in the link ...{col.end}')
     shiftsDeque.rotate(-deltaDays)
 
     currentDay = outputStart        # Counter
@@ -140,7 +181,7 @@ def main():
         currentShift = shiftsDeque.popleft()
         # CHECK FOR DAY OF WEEK ALIGNMENT ERROR
         if not currentDay.strftime('%A') == currentShift['dayName']:
-            print(f'{currentDay.strftime("%Y-%m-%d")}; DAY MISMATCH ERROR -- Expecting {currentDay.strftime("%A")} GOT {currentShift["dayName"]} -- Aborting!')
+            print(f'{col.Red}{currentDay.strftime("%Y-%m-%d")}; DAY MISMATCH ERROR -- {col.Yel}Expecting {currentDay.strftime("%A")} {col.Cyn}GOT {currentShift["dayName"]} {col.Red}-- Aborting!')
             sys.exit(2)
         if args.verbose:
             print(f'Processing {currentDay.strftime("%a %d %b")}')
@@ -173,6 +214,7 @@ def main():
         f.seek(0)
         f.write(calendarOutputText)
         f.truncate()
+    print(f'{col.mag}Calendar File Saved as ... {col.Yel}{outputFile}')
 
 
 def makeEvent(title, date, line=1, allDay=False, start=False, duration=False, spare=False, verbose=False):
