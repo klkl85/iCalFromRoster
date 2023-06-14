@@ -65,6 +65,7 @@ def main():
     parser.add_argument('-i', '--input', help='Roster file to parse')
     parser.add_argument('-o', '--output', help='Calendar output file', default=None)
     parser.add_argument('-l', '--line', help='Starting line in the link', default=None)
+    parser.add_argument('-r', '--restOnly', help='Only Output Rest Days', default=False, action='store_true')
     parser.add_argument('-v', '--verbose', help='Displays extra processing information', default=False, action='store_true')
     args = parser.parse_args()
 
@@ -186,10 +187,16 @@ def main():
         if args.verbose:
             print(f'Processing {currentDay.strftime("%a %d %b")}')
             print(currentShift)
-        calendarList += makeEvent(title=currentShift['job'], date=currentDay.strftime('%Y%m%d'),
-                                  allDay=currentShift['rest'], start=currentShift['start'],
-                                  duration=currentShift['duration'], line=currentShift['line'],
-                                  spare=currentShift['spare'], verbose=args.verbose)
+            if args.restOnly and currentShift['rest'] is False:
+                print(f'`{col.Cyn}Rest Days Only: {col.mag}`{currentShift["job"]}` on `{currentDay.strftime("%Y%m%d")}` has been OMITTED{col.end}')
+            # else:
+            #     print(f'`{args.restOnly}` = Rest Only DECLINED')
+
+        if not args.restOnly or currentShift['rest'] is True:
+            calendarList += makeEvent(title=currentShift['job'], date=currentDay.strftime('%Y%m%d'),
+                                      allDay=currentShift['rest'], start=currentShift['start'],
+                                      duration=currentShift['duration'], line=currentShift['line'],
+                                      spare=currentShift['spare'], verbose=args.verbose)
         shiftsDeque.append(currentShift)
         currentDay = currentDay + timedelta(days=1)
 
