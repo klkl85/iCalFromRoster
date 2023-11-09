@@ -123,9 +123,15 @@ def main():
     with open(rosterCSV, newline='') as rosterFile:
         reader = csv.DictReader(rosterFile)
         if not all(item in reader.fieldnames for item in requiredFieldnames):
-            print(f"{col.Red}The roster file does not have the correct headings.\n{col.Yel}Expecting;\n\t-{col.Cyn}", end='')
-            print('\n\t-'.join(requiredFieldnames))
-            print(f"\n{col.Red}Correct the roster file or alter this script and re-run.")
+            print(f"{col.Red}The roster file does not have the correct headings.\n{col.Yel}Expecting;", end='')
+            for item in requiredFieldnames:
+                color = col.Red if item not in reader.fieldnames else col.Grn
+                print(f"\n\t{color}* {item}", end="")
+            if args.verbose:
+                print(f"\n{col.Yel}Received;", end="")
+                for item in reader.fieldnames:
+                    print(f"\n\t{col.Mag}# {item}")
+            print(f"\n{col.Cyn}Correct the roster file or alter this script and re-run.")
             sys.exit(2)
 
         print(f"{col.Grn}Reading Roster File...{col.end}")
@@ -168,9 +174,10 @@ def main():
         print(f"{col.Red}You can't ask for calendar entries to end before they have started. {col.Yel}Try again.")
         sys.exit(2)
 
+
     # ROTATE DEQUE TO ALIGN WITH START REQUEST
     deltaDays = (outputStart - rosterStart).days
-    print(f'{col.grn}Skipping {col.cyn}{deltaDays} days {col.grn}to get to {col.mag}{outputStart.strftime("%a %d %b")}{col.grn} ...')
+    print(f'{col.grn}Skipping {col.cyn}{deltaDays} days {col.grn}to get to {col.cyn}{outputStart.strftime("%a %d %b")}{col.grn} ...')
     deltaDays += ((startingLine - 1) * 7)
     print(f'Skipping {col.cyn}{startingLine - 1} weeks {col.grn}to get to correct position in the link ...{col.end}')
     shiftsDeque.rotate(-deltaDays)
