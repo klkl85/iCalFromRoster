@@ -65,6 +65,10 @@ def main():
     parser.add_argument('-i', '--input', help='Roster file to parse')
     parser.add_argument('-o', '--output', help='Calendar output file', default=None)
     parser.add_argument('-l', '--line', help='Starting line in the link', default=None)
+    parser.add_argument('-c', '--commence', help='Date the link starts formatted as YYYYMMDD', default=False)
+    parser.add_argument('-s', '--startCalendar', help='Date (YYYYMMDD) you want to start the calendar entries from. Leave blank to start from commencement', default=False)
+    parser.add_argument('-S', '--startOnCommence', help='Calendar entries will start from the link commencement date.', dest='startCalendar', action='store_true')
+    parser.add_argument('-f', '--finishCalendar', help='Date (YYYYMMDD) you want to the calendar entries to finish on.')
     parser.add_argument('-r', '--restOnly', help='Only Output Rest Days', default=False, action='store_true')
     parser.add_argument('-v', '--verbose', help='Displays extra processing information', default=False, action='store_true')
     args = parser.parse_args()
@@ -87,15 +91,26 @@ def main():
             print(f"{col.grn}Found Roster...{col.end}")
 
     # FIND OUT WHEN THE ROSTER STARTS
-    startDate = input(f"What {col.Cyn}date{col.end} does this roster {col.Cyn}START{col.end} {col.blu}(YYYYMMDD){col.end} ? : ")
-    # Validate Roster Start
-    # @TODO HANDLE BLANK DATE
-    rosterStart = datetime(int(startDate[0:4]), int(startDate[4:6]), int(startDate[6:8]))
-    if not rosterStart.weekday() == 6:
-        print(f"{col.Red}Roster {col.Yel}MUST{col.Red} start on a {col.Yel}Sunday{col.Red}... Re-start the script")
+    invalidCommence = False
+    if args.commence:
+        valid, outcome = validateDate(args.commence)
+        if valid:
+            rosterStart = outcome
+            print(f"{col.Mag}Link {col.Grn}commences on {col.Umag}{rosterStart.strftime('%a %d %b %Y')}{col.end}")
+        else:
+            invalidCommence = True
+    else:
+        startDate = input(f"What {col.Cyn}date{col.end} does this roster {col.Cyn}START{col.end} {col.blu}(YYYYMMDD){col.end} ? : ")
+        valid, outcome = validateDate(startDate)
+        if valid:
+            rosterStart = outcome
+            if args.verbose:
+                print(rosterStart.strftime('Roster Starts %a %d %b'))
+        else:
+            invalidCommence = True
+    if invalidCommence:
+        print(f"{col.Red}Invalid {col.Yel}Commence Date{col.Red} supplied... must use {col.Uyel}YYYYMMDD{col.Red} format.{col.end}")
         sys.exit(2)
-    if args.verbose:
-        print(rosterStart.strftime('Roster Starts %a %d %b'))
 
     # FIND OUT STARTING POSITION IN THE LINK
     if args.line is None:
@@ -159,17 +174,55 @@ def main():
     if args.verbose:
         print("Finished reading roster...")
 
-    # DETERMINE HOW WHEN TO START / STOP OUTPUTTING CALENDAR ENTRIES
-    outputStartRequest = input(f"What {col.Cyn}date{col.end} do you want {col.Cyn}calendar{col.end} entries {col.Cyn}START {col.blu}(YYYYMMDD){col.end} ? : ")
-    # @TODO HANDLE BLANK DATE
-    outputStart = datetime(int(outputStartRequest[0:4]), int(outputStartRequest[4:6]), int(outputStartRequest[6:8]))
+
+    # DETERMINE WHEN TO START OUTPUTTING CALENDAR ENTRIES
+    startDateError = False
+    if args.startCalendar:
+        if isinstance(args.startCalendar, bool):
+            outputStart = rosterStart
+            print(f"{col.Grn}Output {col.Mag}starting {col.Grn}from {col.Umag}{outputStart.strftime('%a %d %b %Y')}{col.end}")
+        else:
+            valid, outcome = validateDate(args.startCalendar)
+            if valid:
+                outputStart = outcome
+                print(f"{col.Grn}Output {col.Mag}starting {col.Grn}from {col.Umag}{outputStart.strftime('%a %d %b %Y')}{col.end}")
+            else:
+                startDateError = True
+    else:
+        outputStartRequest = input(f"What {col.Cyn}date{col.end} do you want {col.Cyn}calendar{col.end} entries {col.Cyn}START {col.blu}(YYYYMMDD){col.end} ? : ")
+        valid, outcome = validateDate(outputStartRequest)
+        if valid:
+            outputStart = outcome
+        else:
+            startDateError = True
+    if startDateError:
+        print(f"{col.Red}Invalid {col.Yel}Start Date{col.Red} supplied... must use {col.Uyel}YYYYMMDD{col.Red} format.")
+        sys.exit(2)
+    # Handle Earlier than roster start
     if outputStart < rosterStart:
         print(f"{col.Red}You can't ask for calendar entries before the roster starts. {col.Yel}Try again.")
         sys.exit(2)
 
-    outputEndRequest = input(f"What {col.Cyn}date{col.end} do you want {col.Cyn}calendar{col.end} entries {col.Cyn}END {col.blu}(YYYYMMDD){col.end} ? : ")
-    # @TODO HANDLE BLANK DATE
-    outputEnd = datetime(int(outputEndRequest[0:4]), int(outputEndRequest[4:6]), int(outputEndRequest[6:8]), 23, 59, 59)
+
+    # DETERMINE WHEN TO STOP OUTPUTTING CALENDAR ENTRIES
+    finishDateError = False
+    if args.finishCalendar:
+        valid, outcome = validateDate(args.finishCalendar)
+        if valid:
+            outputEnd = outcome
+            print(f"{col.Grn}Output {col.Mag}finishing {col.Grn}on {col.Umag}{outputEnd.strftime('%a %d %b %Y')}{col.end}")
+        else:
+            finishDateError = True
+    else:
+        outputEndRequest = input(f"What {col.Cyn}date{col.end} do you want {col.Cyn}calendar{col.end} entries {col.Cyn}END {col.blu}(YYYYMMDD){col.end} ? : ")
+        valid, outcome = validateDate(outputEndRequest)
+        if valid:
+            outputEnd = outcome
+        else:
+            finishDateError = True
+    if finishDateError:
+        print(f"{col.Red}Invalid {col.Yel}Finish Date{col.Red} supplied... must use {col.Uyel}YYYYMMDD{col.Red} format.")
+        sys.exit(2)
     if outputEnd < outputStart:
         print(f"{col.Red}You can't ask for calendar entries to end before they have started. {col.Yel}Try again.")
         sys.exit(2)
@@ -280,6 +333,17 @@ def makeEvent(title, date, line=1, allDay=False, start=False, duration=False, sp
 
     # eventText = '\n'.join(text for text in eventBuffer)
     return eventBuffer
+
+
+def validateDate(suspectData):
+    error = False
+    # if len(startDate) == 8:
+    try:
+        dateObject = datetime(int(suspectData[0:4]), int(suspectData[4:6]), int(suspectData[6:8]))
+    except ValueError:
+        error = "Invalid date format supplied"
+        return False, error
+    return True, dateObject
 
 
 if __name__ == "__main__":
