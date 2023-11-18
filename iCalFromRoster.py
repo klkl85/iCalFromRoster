@@ -244,9 +244,12 @@ def main():
     currentDay = outputStart        # Counter
     calendarList = calPreamble      # Container for calendar events as they are processed
 
-    while currentDay < outputEnd:
+    #print(f'{col.mag}OutputStart {col.blu}{currentDay}{col.end}')
+
     while currentDay <= outputEnd:
         currentShift = shiftsDeque.popleft()
+        #print(f'{col.Ured}Current Day {col.blu}{currentDay}{col.end}')
+        #print(f'{col.Uyel}Current Shift {col.mag}{currentShift}{col.end}')
         # CHECK FOR DAY OF WEEK ALIGNMENT ERROR
         if not currentDay.strftime('%A') == currentShift['dayName']:
             print(f'{col.Red}{currentDay.strftime("%Y-%m-%d")}; DAY MISMATCH ERROR -- {col.Yel}Expecting {currentDay.strftime("%A")} {col.Cyn}GOT {currentShift["dayName"]} {col.Red}-- Aborting!')
