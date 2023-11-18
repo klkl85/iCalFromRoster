@@ -245,6 +245,7 @@ def main():
     calendarList = calPreamble      # Container for calendar events as they are processed
 
     while currentDay < outputEnd:
+    while currentDay <= outputEnd:
         currentShift = shiftsDeque.popleft()
         # CHECK FOR DAY OF WEEK ALIGNMENT ERROR
         if not currentDay.strftime('%A') == currentShift['dayName']:
