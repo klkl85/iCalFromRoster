@@ -5,6 +5,7 @@ import uuid
 import argparse
 from os.path import exists
 from collections import deque
+import random
 
 
 class col:
@@ -44,11 +45,16 @@ class col:
     selected = '\033[7m'
 
 
+def randomColour():
+    r = lambda: random.randint(0, 255)
+    return '#%02X%02X%02X' % (r(), r(), r())
+
+
 calPreamble = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//JwF//Roster to Calendar//EN',
-    'X-APPLE-CALENDAR-COLOR:#44A703',
+    f'X-APPLE-CALENDAR-COLOR:{randomColour()}',
     'X-WR-TIMEZONE:Europe/London',
     'CALSCALE:GREGORIAN',
 ]
@@ -245,7 +251,7 @@ def main():
             print(f'{col.Red}{currentDay.strftime("%Y-%m-%d")}; DAY MISMATCH ERROR -- {col.Yel}Expecting {currentDay.strftime("%A")} {col.Cyn}GOT {currentShift["dayName"]} {col.Red}-- Aborting!')
             sys.exit(2)
         if args.verbose:
-            print(f'Processing {currentDay.strftime("%a %d %b")}')
+            print(f'{col.Yel}Processing{col.end} {col.mag}{currentDay.strftime("%a %d %b")}{col.end}')
             print(currentShift)
             if args.restOnly and currentShift['rest'] is False:
                 print(f'`{col.Cyn}Rest Days Only: {col.mag}`{currentShift["job"]}` on `{currentDay.strftime("%Y%m%d")}` has been OMITTED{col.end}')
@@ -257,6 +263,9 @@ def main():
                                       allDay=currentShift['rest'], start=currentShift['start'],
                                       duration=currentShift['duration'], line=currentShift['line'],
                                       spare=currentShift['spare'], verbose=args.verbose)
+        else:
+            print(f'{col.Ured}{col.blink}ABORT!!!{col.end}')
+            sys.exit(2)
         shiftsDeque.append(currentShift)
         currentDay = currentDay + timedelta(days=1)
 
@@ -286,6 +295,7 @@ def main():
 
 def makeEvent(title, date, line=1, allDay=False, start=False, duration=False, spare=False, verbose=False):
     nowString = datetime.now().strftime('%Y%m%dT%H%M%S')
+    # print(f'{col.Cyn}Making Event{col.end} for {nowString}')
     # print(int(date[0:4]), int(date[4:6]), int(date[6:8]))
     if allDay:
         startTime = datetime(int(date[0:4]), int(date[4:6]), int(date[6:8]))
@@ -294,8 +304,8 @@ def makeEvent(title, date, line=1, allDay=False, start=False, duration=False, sp
         startTime = datetime(int(date[0:4]), int(date[4:6]), int(date[6:8]), int(start[0:2]), int(start[2:4]))
         endTime = startTime + timedelta(hours=int(duration[0:2]), minutes=int(duration[2:4]))
     if verbose:
-        print(f'Shift Starts {startTime.strftime("%a %d %b - %H.%M")}')
-        print(f'Shift Ends {endTime.strftime("%a %d %b - %H.%M")}')
+        print(f'Shift {col.Blu}Starts{col.end} {startTime.strftime("%a %d %b - %H.%M")}')
+        print(f'Shift {col.Blu}Ends{col.end} {endTime.strftime("%a %d %b - %H.%M")}')
     if allDay:
         dstart = f';VALUE=DATE:{startTime.strftime("%Y%m%d")}'
         dend = f';VALUE=DATE:{endTime.strftime("%Y%m%d")}'
