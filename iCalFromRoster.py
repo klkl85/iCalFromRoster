@@ -321,7 +321,7 @@ def makeEvent(title, date, line=1, allDay=False, start=False, duration=False, sp
         dend = f':{endTime.strftime("%Y%m%dT%H%M00")}'
         desc = f'Shift Length, {duration[0:2]}:{duration[2:4]}\\nLine {line}'
         title = title if not spare else 'Spare'
-        locationString = '5 Boad St\\nManchester\\n M1 2DW\\n, England\\n M1 2DW'
+        locationString = '5 Boad St, \\nManchester, \\nEngland, \\nM1 2DW'
 
     eventBuffer = [
         'BEGIN:VEVENT',
